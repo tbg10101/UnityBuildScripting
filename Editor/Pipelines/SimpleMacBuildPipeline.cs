@@ -7,9 +7,9 @@ namespace Software10101.BuildScripting.Editor {
                 scenes,
                 $"{PlayerNameNoSpaces}.app",
                 BuildOptions.StrictMode));
-            AddStep(new ZipArchive(
+            AddStep(new ArchiveTar(
                 $"{PlayerNameNoSpaces}.app",
-                $"{PlayerNameNoSpaces}_{Target.ToString()}.zip"));
+                $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz" ));
         }
     }
 }

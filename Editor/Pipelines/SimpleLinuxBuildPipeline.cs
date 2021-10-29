@@ -8,9 +8,9 @@ namespace Software10101.BuildScripting.Editor {
                 scenes,
                 Path.Combine(PlayerNameNoSpaces, $"{PlayerNameNoSpaces}.x86_64"),
                 BuildOptions.StrictMode));
-            AddStep(new ZipArchive(
+            AddStep(new ArchiveTar(
                 PlayerNameNoSpaces,
-                $"{PlayerNameNoSpaces}_{Target.ToString()}.zip"));
+                $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz"));
         }
     }
 }
