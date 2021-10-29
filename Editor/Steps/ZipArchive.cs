@@ -5,7 +5,7 @@ using Debug = UnityEngine.Debug;
 
 namespace Software10101.BuildScripting.Editor {
     public class ZipArchive : AbstractBuildStep {
-        const string Zip = @"C:\Program Files\7-Zip\7z.exe";
+        private const string Zip = @"C:\Program Files\7-Zip\7z.exe";
 
         private readonly string _directoryToArchive;
         private readonly string _outputPath;
@@ -18,10 +18,7 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
-            string directoryToArchive = Path.Combine(outputDir, pipeline.Target.ToString(), _directoryToArchive);
-            string outputPath = Path.Combine(outputDir, pipeline.Target.ToString(), _outputPath);
-
-            string args = $"a -r -tzip \"{outputPath}\" \"{directoryToArchive}\"";
+            string args = $"a -r -tzip \"{_outputPath}\" \"{_directoryToArchive}\"";
             Debug.Log($"Beginning archive: {Zip} {args}");
 
             Process archiveProcess = new Process {
@@ -32,7 +29,7 @@ namespace Software10101.BuildScripting.Editor {
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    WorkingDirectory = Environment.CurrentDirectory
+                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir, pipeline.Target.ToString())
                 }
             };
 
