@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.10101software.buildscripting": {
-      "version": "file:D:/Software Projects/UnityBuildScripting",
+      "version": "file:../../..",
       "depth": 0,
       "source": "local",
       "dependencies": {}
