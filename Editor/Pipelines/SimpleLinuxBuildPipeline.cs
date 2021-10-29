@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace Software10101.BuildScripting.Editor {
     public class SimpleLinuxBuildPipeline : AbstractSimpleBuildPipeline {
@@ -8,9 +9,15 @@ namespace Software10101.BuildScripting.Editor {
                 scenes,
                 Path.Combine(PlayerNameNoSpaces, $"{PlayerNameNoSpaces}.x86_64"),
                 BuildOptions.StrictMode));
-            AddStep(new ArchiveTar(
-                PlayerNameNoSpaces,
-                $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz"));
+            if (Application.platform == RuntimePlatform.WindowsEditor) {
+                AddStep(new ArchiveCygwinTar(
+                    PlayerNameNoSpaces,
+                    $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz"));
+            } else {
+                AddStep(new ArchiveTar(
+                    PlayerNameNoSpaces,
+                    $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz"));
+            }
         }
     }
 }

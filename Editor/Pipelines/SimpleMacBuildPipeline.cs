@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEngine;
 
 namespace Software10101.BuildScripting.Editor {
     public class SimpleMacBuildPipeline : AbstractSimpleBuildPipeline {
@@ -7,9 +8,15 @@ namespace Software10101.BuildScripting.Editor {
                 scenes,
                 $"{PlayerNameNoSpaces}.app",
                 BuildOptions.StrictMode));
-            AddStep(new ArchiveTar(
-                $"{PlayerNameNoSpaces}.app",
-                $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz" ));
+            if (Application.platform == RuntimePlatform.WindowsEditor) {
+                AddStep(new ArchiveCygwinTar(
+                    $"{PlayerNameNoSpaces}.app",
+                    $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz"));
+            } else {
+                AddStep(new ArchiveTar(
+                    $"{PlayerNameNoSpaces}.app",
+                    $"{PlayerNameNoSpaces}_{Target.ToString()}.tgz"));
+            }
         }
     }
 }

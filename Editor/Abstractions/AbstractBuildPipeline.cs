@@ -19,23 +19,27 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         internal void Execute(string outputDir, Action<Action> enqueueToMainThread) {
-            foreach (AbstractBuildStep buildStep in _steps) {
-                if (buildStep.UseMainThread) {
-                    bool stepComplete = false;
+            try {
+                foreach (AbstractBuildStep buildStep in _steps) {
+                    if (buildStep.UseMainThread) {
+                        bool stepComplete = false;
 
-                    enqueueToMainThread.Invoke(() => {
-                        Debug.Log($"Step starting on main thread: {Target.ToString()}-{buildStep.GetType().Name}");
+                        enqueueToMainThread.Invoke(() => {
+                            Debug.Log($"Step starting on main thread: {Target.ToString()}-{buildStep.GetType().Name}");
+                            buildStep.Execute(outputDir, this);
+                            Debug.Log($"Step complete: {Target.ToString()}-{buildStep.GetType().Name}");
+                            stepComplete = true;
+                        });
+
+                        SpinWait.SpinUntil(() => stepComplete);
+                    } else {
+                        Debug.Log($"Step starting off main thread: {Target.ToString()}-{buildStep.GetType().Name}");
                         buildStep.Execute(outputDir, this);
                         Debug.Log($"Step complete: {Target.ToString()}-{buildStep.GetType().Name}");
-                        stepComplete = true;
-                    });
-
-                    SpinWait.SpinUntil(() => stepComplete);
-                } else {
-                    Debug.Log($"Step starting off main thread: {Target.ToString()}-{buildStep.GetType().Name}");
-                    buildStep.Execute(outputDir, this);
-                    Debug.Log($"Step complete: {Target.ToString()}-{buildStep.GetType().Name}");
+                    }
                 }
+            } catch (Exception e) {
+                Debug.LogException(e);
             }
         }
     }

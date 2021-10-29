@@ -1,11 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace Software10101.BuildScripting.Editor {
     public class ArchiveTar : AbstractBuildStep {
-        private const string Application = "tar";
+        private const string ApplicationPath = "tar";
 
         private readonly string _directoryToArchive;
         private readonly string _outputPath;
@@ -13,7 +15,7 @@ namespace Software10101.BuildScripting.Editor {
 
         /// <param name="directoryToArchive">Relative to [workingDir]/[outputDir]/[targetDir].</param>
         /// <param name="outputPath">Relative to [workingDir]/[outputDir]/[targetDir].</param>
-        /// <param name="compress">Whether or not to compress the archive.</param>
+        /// <param name="compress">Whether or not to compress the archive with gzip.</param>
         public ArchiveTar(string directoryToArchive, string outputPath, bool compress = true) {
             _directoryToArchive = directoryToArchive;
             _outputPath = outputPath;
@@ -21,12 +23,18 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
+            if (Application.platform == RuntimePlatform.WindowsEditor) {
+                if (pipeline.Target == BuildTarget.StandaloneLinux64 || pipeline.Target == BuildTarget.StandaloneOSX) {
+                    Debug.LogWarning("tar on Windows does not preserve POSIX permissions!");
+                }
+            }
+
             string args = $"-c{(_compress ? "z" : "")}f \"{_outputPath}\" \"{_directoryToArchive}\"";
-            Debug.Log($"Beginning archive: {Application} {args}");
+            Debug.Log($"Beginning archive: {ApplicationPath} {args}");
 
             Process archiveProcess = new Process {
                 StartInfo = new ProcessStartInfo {
-                    FileName = Application,
+                    FileName = ApplicationPath,
                     Arguments = args,
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -42,7 +50,11 @@ namespace Software10101.BuildScripting.Editor {
             archiveProcess.Start();
             archiveProcess.WaitForExit();
 
-            Debug.Log($"Archive exited with code: {archiveProcess.ExitCode}");
+            if (archiveProcess.ExitCode == 0) {
+                Debug.Log("Archive exited successfully.");
+            } else {
+                throw new Exception($"Archive exited with code: {archiveProcess.ExitCode}");
+            }
         }
     }
 }

@@ -6,32 +6,24 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace Software10101.BuildScripting.Editor {
-    public class Archive7Zip : AbstractBuildStep {
-        public static string ApplicationPath = @"C:\Program Files\7-Zip\7z.exe";
+    public class ArchiveCygwinTar : AbstractBuildStep {
+        private const string ApplicationPath = @"C:\cygwin\bin\tar.exe";
 
         private readonly string _directoryToArchive;
         private readonly string _outputPath;
-        private readonly string _type;
+        private readonly bool _compress;
 
         /// <param name="directoryToArchive">Relative to [workingDir]/[outputDir]/[targetDir].</param>
         /// <param name="outputPath">Relative to [workingDir]/[outputDir]/[targetDir].</param>
-        /// <param name="type">The type of archive to make.</param>
-        public Archive7Zip(string directoryToArchive, string outputPath, string type) {
-            if (Application.platform != RuntimePlatform.WindowsEditor) {
-                throw new Exception("7-Zip is only supported on Windows.");
-            }
-
+        /// <param name="compress">Whether or not to compress the archive with gzip.</param>
+        public ArchiveCygwinTar(string directoryToArchive, string outputPath, bool compress = true) {
             _directoryToArchive = directoryToArchive;
             _outputPath = outputPath;
-            _type = type;
+            _compress = compress;
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
-            if (pipeline.Target == BuildTarget.StandaloneLinux64 || pipeline.Target == BuildTarget.StandaloneOSX) {
-                Debug.LogWarning("7-Zip does not preserve POSIX permissions!");
-            }
-
-            string args = $"a -r -t{_type} \"{_outputPath}\" \"{_directoryToArchive}\"";
+            string args = $"-c{(_compress ? "z" : "")}f \"{_outputPath}\" \"{_directoryToArchive}\"";
             Debug.Log($"Beginning archive: {ApplicationPath} {args}");
 
             Process archiveProcess = new Process {
