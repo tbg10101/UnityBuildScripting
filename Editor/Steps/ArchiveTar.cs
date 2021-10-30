@@ -23,7 +23,7 @@ namespace Software10101.BuildScripting.Editor {
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
             if (Application.platform == RuntimePlatform.WindowsEditor) {
-                Debug.LogWarning("tar on Windows does not preserve POSIX permissions!");
+                Debug.LogWarning("tar on Windows does not preserve permissions!");
             }
 
             string args = $"-c{(_compress ? "z" : "")}f \"{_outputPath}\" \"{_directoryToArchive}\"";
@@ -41,10 +41,28 @@ namespace Software10101.BuildScripting.Editor {
                 }
             };
 
-            archiveProcess.OutputDataReceived += (_,  message) => Debug.Log(message.Data);
-            archiveProcess.ErrorDataReceived += (_,  message) => Debug.LogError(message.Data);
+            archiveProcess.OutputDataReceived += (_,  message) => {
+                if (string.IsNullOrEmpty(message.Data))
+                {
+                    return;
+                }
+
+                Debug.Log(message.Data);
+            };
+
+            archiveProcess.ErrorDataReceived += (_,  message) => {
+                if (string.IsNullOrEmpty(message.Data))
+                {
+                    return;
+                }
+
+                Debug.LogError(message.Data);
+            };
 
             archiveProcess.Start();
+            archiveProcess.BeginOutputReadLine();
+            archiveProcess.BeginErrorReadLine();
+
             archiveProcess.WaitForExit();
 
             if (archiveProcess.ExitCode == 0) {

@@ -26,33 +26,52 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
-            Debug.LogWarning("7-Zip does not preserve POSIX permissions!");
+            Debug.LogWarning("7-Zip does not preserve permissions!");
 
             string args = $"a -r -t{_type} \"{_outputPath}\" \"{_directoryToArchive}\"";
             Debug.Log($"Beginning archive: {ApplicationPath} {args}");
 
-            Process archiveProcess = new Process {
-                StartInfo = new ProcessStartInfo {
-                    FileName = ApplicationPath,
-                    Arguments = args,
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir)
+            using (Process archiveProcess = new Process {
+                       StartInfo = new ProcessStartInfo {
+                           FileName = ApplicationPath,
+                           Arguments = args,
+                           CreateNoWindow = true,
+                           UseShellExecute = false,
+                           RedirectStandardOutput = true,
+                           RedirectStandardError = true,
+                           WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir)
+                       }
+                    }
+            ) {
+                archiveProcess.OutputDataReceived += (_,  message) => {
+                    if (string.IsNullOrEmpty(message.Data))
+                    {
+                        return;
+                    }
+
+                    Debug.Log(message.Data);
+                };
+
+                archiveProcess.ErrorDataReceived += (_,  message) => {
+                    if (string.IsNullOrEmpty(message.Data))
+                    {
+                        return;
+                    }
+
+                    Debug.LogError(message.Data);
+                };
+
+                archiveProcess.Start();
+                archiveProcess.BeginOutputReadLine();
+                archiveProcess.BeginErrorReadLine();
+
+                archiveProcess.WaitForExit();
+
+                if (archiveProcess.ExitCode == 0) {
+                    Debug.Log("Archive exited successfully.");
+                } else {
+                    throw new Exception($"Archive exited with code: {archiveProcess.ExitCode}");
                 }
-            };
-
-            archiveProcess.OutputDataReceived += (_,  message) => Debug.Log(message.Data);
-            archiveProcess.ErrorDataReceived += (_,  message) => Debug.LogError(message.Data);
-
-            archiveProcess.Start();
-            archiveProcess.WaitForExit();
-
-            if (archiveProcess.ExitCode == 0) {
-                Debug.Log("Archive exited successfully.");
-            } else {
-                throw new Exception($"Archive exited with code: {archiveProcess.ExitCode}");
             }
         }
     }

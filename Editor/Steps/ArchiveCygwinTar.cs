@@ -40,10 +40,28 @@ namespace Software10101.BuildScripting.Editor {
                 }
             };
 
-            archiveProcess.OutputDataReceived += (_,  message) => Debug.Log(message.Data);
-            archiveProcess.ErrorDataReceived += (_,  message) => Debug.LogError(message.Data);
+            archiveProcess.OutputDataReceived += (_,  message) => {
+                if (string.IsNullOrEmpty(message.Data))
+                {
+                    return;
+                }
+
+                Debug.Log(message.Data);
+            };
+
+            archiveProcess.ErrorDataReceived += (_,  message) => {
+                if (string.IsNullOrEmpty(message.Data))
+                {
+                    return;
+                }
+
+                Debug.LogError(message.Data);
+            };
 
             archiveProcess.Start();
+            archiveProcess.BeginOutputReadLine();
+            archiveProcess.BeginErrorReadLine();
+
             archiveProcess.WaitForExit();
 
             if (archiveProcess.ExitCode == 0) {
@@ -74,10 +92,28 @@ namespace Software10101.BuildScripting.Editor {
                 }
             };
 
-            compressProcess.OutputDataReceived += (_,  message) => Debug.Log(message.Data);
-            compressProcess.ErrorDataReceived += (_,  message) => Debug.LogError(message.Data);
+            compressProcess.OutputDataReceived += (_,  message) => {
+                if (string.IsNullOrEmpty(message.Data))
+                {
+                    return;
+                }
+
+                Debug.Log(message.Data);
+            };
+
+            compressProcess.ErrorDataReceived += (_,  message) => {
+                if (string.IsNullOrEmpty(message.Data))
+                {
+                    return;
+                }
+
+                Debug.LogError(message.Data);
+            };
 
             compressProcess.Start();
+            compressProcess.BeginOutputReadLine();
+            compressProcess.BeginErrorReadLine();
+
             compressProcess.WaitForExit();
 
             if (compressProcess.ExitCode == 0) {
