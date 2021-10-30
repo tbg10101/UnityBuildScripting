@@ -4,10 +4,13 @@ using UnityEngine;
 
 namespace Software10101.BuildScripting.Editor {
     public class SimpleLinuxBuildPipeline : AbstractSimpleBuildPipeline {
-        public SimpleLinuxBuildPipeline(string[] scenes) : base(BuildTarget.StandaloneLinux64) {
+        private const BuildTarget Target = BuildTarget.StandaloneLinux64;
+
+        public SimpleLinuxBuildPipeline(string[] scenes) : base(Target.ToString()) {
             AddStep(new BuildPlayerStep(
                 scenes,
                 Path.Combine(PlayerNameNoSpaces, $"{PlayerNameNoSpaces}.x86_64"),
+                Target,
                 BuildOptions.StrictMode));
             if (Application.platform == RuntimePlatform.WindowsEditor) {
                 AddStep(new ArchiveCygwinTar(

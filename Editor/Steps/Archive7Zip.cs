@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -27,9 +26,7 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
-            if (pipeline.Target == BuildTarget.StandaloneLinux64 || pipeline.Target == BuildTarget.StandaloneOSX) {
-                Debug.LogWarning("7-Zip does not preserve POSIX permissions!");
-            }
+            Debug.LogWarning("7-Zip does not preserve POSIX permissions!");
 
             string args = $"a -r -t{_type} \"{_outputPath}\" \"{_directoryToArchive}\"";
             Debug.Log($"Beginning archive: {ApplicationPath} {args}");

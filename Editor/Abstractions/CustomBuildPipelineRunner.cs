@@ -33,7 +33,7 @@ namespace Software10101.BuildScripting.Editor {
             ICollection<Thread> threads = buildPipelines
                 .Select(bp => {
                     Thread newThread = new Thread(() => bp.Execute(outputDir, a => mainThreadQueue.Add(a))) {
-                        Name = $"CustomBuildPipelineRunner-{bp.Target}"
+                        Name = $"CustomBuildPipelineRunner-{bp.Name}"
                     };
 
                     newThread.Start();

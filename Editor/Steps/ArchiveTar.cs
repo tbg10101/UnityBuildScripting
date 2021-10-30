@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -24,9 +23,7 @@ namespace Software10101.BuildScripting.Editor {
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
             if (Application.platform == RuntimePlatform.WindowsEditor) {
-                if (pipeline.Target == BuildTarget.StandaloneLinux64 || pipeline.Target == BuildTarget.StandaloneOSX) {
-                    Debug.LogWarning("tar on Windows does not preserve POSIX permissions!");
-                }
+                Debug.LogWarning("tar on Windows does not preserve POSIX permissions!");
             }
 
             string args = $"-c{(_compress ? "z" : "")}f \"{_outputPath}\" \"{_directoryToArchive}\"";

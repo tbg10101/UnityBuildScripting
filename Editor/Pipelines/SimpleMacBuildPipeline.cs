@@ -3,10 +3,13 @@ using UnityEngine;
 
 namespace Software10101.BuildScripting.Editor {
     public class SimpleMacBuildPipeline : AbstractSimpleBuildPipeline {
-        public SimpleMacBuildPipeline(string[] scenes) : base(BuildTarget.StandaloneOSX) {
+        private const BuildTarget Target = BuildTarget.StandaloneOSX;
+
+        public SimpleMacBuildPipeline(string[] scenes) : base(Target.ToString()) {
             AddStep(new BuildPlayerStep(
                 scenes,
                 $"{PlayerNameNoSpaces}.app",
+                Target,
                 BuildOptions.StrictMode));
             if (Application.platform == RuntimePlatform.WindowsEditor) {
                 AddStep(new ArchiveCygwinTar(

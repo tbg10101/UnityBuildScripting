@@ -5,7 +5,7 @@ namespace Software10101.BuildScripting.Editor {
         protected readonly string PlayerName = PlayerSettings.productName;
         protected readonly string PlayerNameNoSpaces = PlayerSettings.productName.Replace(" ", "");
 
-        protected AbstractSimpleBuildPipeline(BuildTarget target) : base(target) {
+        protected AbstractSimpleBuildPipeline(string name) : base(name) {
             AddStep(new DeleteDirectoryStep(""));
         }
     }
