@@ -1,13 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using UnityEditor;
-using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace Software10101.BuildScripting.Editor {
     public class ArchiveCygwinTar : AbstractBuildStep {
-        private const string ApplicationPath = @"C:\cygwin\bin\tar.exe";
+
+        public static string TarPath = @"C:\cygwin\bin\tar.exe";
+        public static string GzipPath = @"C:\cygwin\bin\gzip.exe";
 
         private readonly string _directoryToArchive;
         private readonly string _outputPath;
@@ -23,18 +23,20 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
-            string args = $"-c{(_compress ? "z" : "")}f \"{_outputPath}\" \"{_directoryToArchive}\"";
-            Debug.Log($"Beginning archive: {ApplicationPath} {args}");
+            string tarFileName = $"{Path.GetFileNameWithoutExtension(_outputPath)}.tar";
+
+            string tarArgs = $"-cf \"{tarFileName}\" \"{_directoryToArchive}\"";
+            Debug.Log($"Beginning archive: {TarPath} {tarArgs}");
 
             Process archiveProcess = new Process {
                 StartInfo = new ProcessStartInfo {
-                    FileName = ApplicationPath,
-                    Arguments = args,
+                    FileName = TarPath,
+                    Arguments = tarArgs,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir, pipeline.Target.ToString())
+                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir)
                 }
             };
 
@@ -49,6 +51,44 @@ namespace Software10101.BuildScripting.Editor {
             } else {
                 throw new Exception($"Archive exited with code: {archiveProcess.ExitCode}");
             }
+
+            if (!_compress) {
+                File.Move(
+                    Path.Combine(outputDir, tarFileName),
+                    Path.Combine(outputDir, _outputPath));
+                return;
+            }
+
+            string compressArgs = $"\"{tarFileName}\"";
+            Debug.Log($"Beginning compress: {GzipPath} {compressArgs}");
+
+            Process compressProcess = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = GzipPath,
+                    Arguments = compressArgs,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir)
+                }
+            };
+
+            compressProcess.OutputDataReceived += (_,  message) => Debug.Log(message.Data);
+            compressProcess.ErrorDataReceived += (_,  message) => Debug.LogError(message.Data);
+
+            compressProcess.Start();
+            compressProcess.WaitForExit();
+
+            if (compressProcess.ExitCode == 0) {
+                Debug.Log("Compression exited successfully.");
+            } else {
+                throw new Exception($"Compression exited with code: {compressProcess.ExitCode}");
+            }
+
+            File.Move(
+                Path.Combine(outputDir, $"{tarFileName}.gz"),
+                Path.Combine(outputDir, _outputPath));
         }
     }
 }

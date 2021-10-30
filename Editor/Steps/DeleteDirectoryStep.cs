@@ -12,7 +12,7 @@ namespace Software10101.BuildScripting.Editor {
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
             try {
-                string path = Path.Combine(outputDir, pipeline.Target.ToString(), _path);
+                string path = Path.Combine(outputDir, _path);
                 Directory.Delete(path, true);
                 Debug.Log($"Deleted directory: {path}");
             } catch (DirectoryNotFoundException) {

@@ -17,7 +17,7 @@ namespace Software10101.BuildScripting.Editor {
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
-            string outputPath = Path.Combine(outputDir, pipeline.Target.ToString(), _outputPath);
+            string outputPath = Path.Combine(outputDir, _outputPath);
             BuildPipeline.BuildPlayer(_scenes, outputPath, pipeline.Target, _options);
         }
     }

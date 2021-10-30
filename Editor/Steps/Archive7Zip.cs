@@ -42,7 +42,7 @@ namespace Software10101.BuildScripting.Editor {
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir, pipeline.Target.ToString())
+                    WorkingDirectory = Path.Combine(Environment.CurrentDirectory, outputDir)
                 }
             };
 
