@@ -6,6 +6,7 @@ using UnityEngine;
 namespace Software10101.BuildScripting.Example {
     public static class Build {
         private const string BuildsDir = "Builds";
+        private const uint SteamAppId = 1000;
 
         private static readonly string[] Scenes = {
             "Assets/Scenes/Example.unity"
@@ -41,28 +42,39 @@ namespace Software10101.BuildScripting.Example {
 
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleMacSteamBuildPipeline(Scenes, 1000, 1001, username, password));
+                new SimpleMacSteamBuildPipeline(Scenes, SteamAppId, 1001, username, password));
         }
 
-        [MenuItem("Build/Windows (Steam)", false, 100)]
+        [MenuItem("Build/Windows (Steam)", false, 101)]
         private static void BuildWindowsSteam() {
             (string username, string password) = GetSteamNameAndPassword();
 
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleWindowsSteamBuildPipeline(Scenes, 1000, 1001, username, password));
+                new SimpleWindowsSteamBuildPipeline(Scenes, SteamAppId, 1002, username, password));
         }
 
-        [MenuItem("Build/Linux (Steam)", false, 100)]
+        [MenuItem("Build/Linux (Steam)", false, 102)]
         private static void BuildLinuxSteam() {
             (string username, string password) = GetSteamNameAndPassword();
 
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleLinuxSteamBuildPipeline(Scenes, 1000, 1001, username, password));
+                new SimpleLinuxSteamBuildPipeline(Scenes, SteamAppId, 1003, username, password));
         }
 
-        [MenuItem("Build/Clean", false, 201)]
+        [MenuItem("Build/All (Steam)", false, 109)]
+        private static void BuildAllSteam() {
+            (string username, string password) = GetSteamNameAndPassword();
+
+            CustomBuildPipelineRunner.Execute(
+                BuildsDir,
+                new SimpleMacSteamBuildPipeline(Scenes, SteamAppId, 1001, username, password),
+                new SimpleLinuxSteamBuildPipeline(Scenes, SteamAppId, 1003, username, password),
+                new SimpleWindowsSteamBuildPipeline(Scenes, SteamAppId, 1002, username, password));
+        }
+
+        [MenuItem("Build/Clean", false, 200)]
         private static void Clean() {
             if (Directory.Exists(BuildsDir)) {
                 Directory.Delete(BuildsDir, true);
