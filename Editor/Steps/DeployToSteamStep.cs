@@ -31,22 +31,19 @@ namespace Software10101.BuildScripting.Editor {
         private readonly string _contentRoot;
         private readonly string _accountName;
         private readonly string _accountPassword;
-        private readonly int _timeoutMillis;
 
         public DeployToSteamStep(
             uint appId,
             uint depotId,
             string contentRoot,
             string accountName,
-            string accountPassword,
-            int timeoutMillis = 60000 // 1 minute
+            string accountPassword
         ) {
             _appId = appId;
             _depotId = depotId;
             _contentRoot = contentRoot;
             _accountName = accountName;
             _accountPassword = accountPassword;
-            _timeoutMillis = timeoutMillis;
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
@@ -57,7 +54,7 @@ namespace Software10101.BuildScripting.Editor {
             sb.AppendLine("{");
             {
                 sb.AppendLine($"	\"AppID\" \"{_appId}\"");
-                sb.AppendLine("	\"Desc\" \"UnityBuildScripting\"");
+                sb.AppendLine($"	\"Desc\" \"UnityBuildScripting-{pipeline.Name}\"");
 
                 sb.AppendLine($"	\"ContentRoot\" \"{_contentRoot}\"");
                 sb.AppendLine("	\"BuildOutput\" \"steam_logs\"");
