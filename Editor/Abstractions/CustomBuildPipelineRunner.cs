@@ -9,6 +9,8 @@ using Debug = UnityEngine.Debug;
 using ThreadState = System.Threading.ThreadState;
 
 namespace Software10101.BuildScripting.Editor {
+    // TODO: update this to use the Progress API when we update to 2020.x:
+    // https://docs.unity3d.com/2020.3/Documentation/ScriptReference/Progress.html
     [InitializeOnLoad]
     public static class CustomBuildPipelineRunner {
         private static readonly Thread UnityMainThread = null;
