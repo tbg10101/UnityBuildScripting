@@ -8,7 +8,7 @@ namespace Software10101.BuildScripting.Editor {
     public abstract class AbstractBuildPipeline {
         public readonly string Name;
 
-        private readonly ICollection<AbstractBuildStep> _steps = new List<AbstractBuildStep>();
+        private readonly IList<AbstractBuildStep> _steps = new List<AbstractBuildStep>();
 
         protected AbstractBuildPipeline(string name) {
             Name = name;
@@ -18,22 +18,39 @@ namespace Software10101.BuildScripting.Editor {
             _steps.Add(step);
         }
 
-        internal void Execute(string outputDir, Action<Action> enqueueToMainThread) {
+        internal void Execute(string outputDir, Action<IEnumerable<Action>> enqueueToMainThread) {
             string targetOutputDir = Path.Combine(outputDir, Name);
 
             try {
-                foreach (AbstractBuildStep buildStep in _steps) {
+                for (int i = 0; i < _steps.Count; i++) {
+                    AbstractBuildStep buildStep = _steps[i];
+
                     if (buildStep.UseMainThread) {
-                        bool stepComplete = false;
+                        // if there are consecutive build steps which occur on the main thread, group them together
 
-                        enqueueToMainThread.Invoke(() => {
-                            Debug.Log($"Step starting on main thread: {Name}-{buildStep.GetType().Name}");
-                            buildStep.Execute(targetOutputDir, this);
-                            Debug.Log($"Step complete: {Name}-{buildStep.GetType().Name}");
-                            stepComplete = true;
-                        });
+                        int uncompletedStepsCount = 0; // not atomic because these steps all execute on the main thread
 
-                        SpinWait.SpinUntil(() => stepComplete);
+                        ICollection<Action> consecutiveMainThreadSteps = new LinkedList<Action>();
+
+                        while (i < _steps.Count && buildStep.UseMainThread) {
+                            AbstractBuildStep mainThreadBuildStep = _steps[i];
+                            uncompletedStepsCount++;
+
+                            consecutiveMainThreadSteps.Add(() => {
+                                Debug.Log($"Step starting on main thread: {Name}-{mainThreadBuildStep.GetType().Name}");
+                                mainThreadBuildStep.Execute(targetOutputDir, this);
+                                Debug.Log($"Step complete: {Name}-{mainThreadBuildStep.GetType().Name}");
+                                uncompletedStepsCount--;
+                            });
+
+                            i++;
+                        }
+
+                        i--; // because we are still in a foreach
+
+                        enqueueToMainThread(consecutiveMainThreadSteps);
+
+                        SpinWait.SpinUntil(() => uncompletedStepsCount <= 0);
                     } else {
                         Debug.Log($"Step starting off main thread: {Name}-{buildStep.GetType().Name}");
                         buildStep.Execute(targetOutputDir, this);

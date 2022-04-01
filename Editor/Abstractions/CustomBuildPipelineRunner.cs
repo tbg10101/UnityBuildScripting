@@ -28,13 +28,24 @@ namespace Software10101.BuildScripting.Editor {
                 throw new Exception("Pipeline runner must be run from Unity's main thread!");
             }
 
+            BuildTarget originalBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             BlockingCollection<Action> mainThreadQueue = new BlockingCollection<Action>();
+
+            void EnqueueToMainThread(IEnumerable<Action> actions) {
+                lock (mainThreadQueue) {
+                    foreach (Action action in actions) {
+                        mainThreadQueue.Add(action);
+                    }
+                }
+            }
+
             ICollection<Thread> threads = buildPipelines
                 .Select(bp => {
-                    Thread newThread = new Thread(() => bp.Execute(outputDir, a => mainThreadQueue.Add(a))) {
+                    Thread newThread = new Thread(() => bp.Execute(outputDir, EnqueueToMainThread)) {
                         Name = $"CustomBuildPipelineRunner-{bp.Name}"
                     };
 
@@ -51,6 +62,10 @@ namespace Software10101.BuildScripting.Editor {
 
             sw.Stop();
             Debug.Log($"All builds finished in {sw.Elapsed.TotalSeconds} seconds.");
+
+            EditorUserBuildSettings.SwitchActiveBuildTarget(
+                BuildPipeline.GetBuildTargetGroup(originalBuildTarget),
+                originalBuildTarget);
         }
     }
 }

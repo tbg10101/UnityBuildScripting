@@ -6,11 +6,25 @@ using UnityEngine;
 namespace Software10101.BuildScripting.Example {
     public static class Build {
         private const string BuildsDir = "Builds";
-        private const uint SteamAppId = 1000;
 
         private static readonly string[] Scenes = {
             "Assets/Scenes/Example.unity"
         };
+
+        #region Steam Parameters
+        private const string SteamCliPath = @"C:\Program Files\Steamworks SDK\tools\ContentBuilder\builder\steamcmd.exe";
+
+        private const uint SteamAppId = 1000;
+        private const uint MacDepotId = 1001;
+        private const uint WindowsDepotId = 1001;
+        private const uint LinuxDepotId = 1001;
+
+        // normally you would get these from a secrets store
+        private const string SteamUsername = "username";
+        private const string SteamPassword = "password";
+        private const string SsfnPath = @"SteamCreds\ssfn12345678901234567890";
+        private const string ConfigVdfPath = @"SteamCreds\config\config.vdf";
+        #endregion
 
         [MenuItem("Build/macOS", false, 0)]
         private static void BuildMac() {
@@ -27,7 +41,7 @@ namespace Software10101.BuildScripting.Example {
             CustomBuildPipelineRunner.Execute(BuildsDir, new SimpleLinuxBuildPipeline(Scenes));
         }
 
-        [MenuItem("Build/All", false, 9)]
+        [MenuItem("Build/All (Standalone)", false, 9)]
         private static void BuildAll() {
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
@@ -38,54 +52,105 @@ namespace Software10101.BuildScripting.Example {
 
         [MenuItem("Build/macOS (Steam)", false, 100)]
         private static void BuildMacSteam() {
-            (string username, string password) = GetSteamNameAndPassword();
-
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleMacSteamBuildPipeline(Scenes, SteamAppId, 1001, username, password));
+                new SimpleMacSteamBuildPipeline(
+                    Scenes,
+                    SteamAppId,
+                    MacDepotId,
+                    SteamUsername,
+                    SteamPassword,
+                    SsfnPath,
+                    ConfigVdfPath,
+                    SteamCliPath));
         }
 
         [MenuItem("Build/Windows (Steam)", false, 101)]
         private static void BuildWindowsSteam() {
-            (string username, string password) = GetSteamNameAndPassword();
-
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleWindowsSteamBuildPipeline(Scenes, SteamAppId, 1002, username, password));
+                new SimpleWindowsSteamBuildPipeline(
+                    Scenes,
+                    SteamAppId,
+                    WindowsDepotId,
+                    SteamUsername,
+                    SteamPassword,
+                    SsfnPath,
+                    ConfigVdfPath,
+                    SteamCliPath));
         }
 
         [MenuItem("Build/Linux (Steam)", false, 102)]
         private static void BuildLinuxSteam() {
-            (string username, string password) = GetSteamNameAndPassword();
-
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleLinuxSteamBuildPipeline(Scenes, SteamAppId, 1003, username, password));
+                new SimpleLinuxSteamBuildPipeline(
+                    Scenes,
+                    SteamAppId,
+                    LinuxDepotId,
+                    SteamUsername,
+                    SteamPassword,
+                    SsfnPath,
+                    ConfigVdfPath,
+                    SteamCliPath));
         }
 
         [MenuItem("Build/All (Steam)", false, 109)]
         private static void BuildAllSteam() {
-            (string username, string password) = GetSteamNameAndPassword();
+            CustomBuildPipelineRunner.Execute(
+                BuildsDir,
+                new SimpleMacSteamBuildPipeline(
+                    Scenes, SteamAppId,
+                    MacDepotId,
+                    SteamUsername,
+                    SteamPassword,
+                    SsfnPath,
+                    ConfigVdfPath,
+                    SteamCliPath),
+                new SimpleLinuxSteamBuildPipeline(
+                    Scenes,
+                    SteamAppId,
+                    LinuxDepotId,
+                    SteamUsername,
+                    SteamPassword,
+                    SsfnPath,
+                    ConfigVdfPath,
+                    SteamCliPath),
+                new SimpleWindowsSteamBuildPipeline(
+                    Scenes,
+                    SteamAppId,
+                    WindowsDepotId,
+                    SteamUsername,
+                    SteamPassword,
+                    SsfnPath,
+                    ConfigVdfPath,
+                    SteamCliPath));
+        }
+
+        [MenuItem("Build/Android", false, 200)]
+        private static void BuildAndroid() {
+            // normally you would get this from a secrets store
+            const string keystorePassword = "666666";
 
             CustomBuildPipelineRunner.Execute(
                 BuildsDir,
-                new SimpleMacSteamBuildPipeline(Scenes, SteamAppId, 1001, username, password),
-                new SimpleLinuxSteamBuildPipeline(Scenes, SteamAppId, 1003, username, password),
-                new SimpleWindowsSteamBuildPipeline(Scenes, SteamAppId, 1002, username, password));
+                new SimpleAndroidBuildPipeline(Scenes, keystorePassword, keystorePassword));
         }
 
-        [MenuItem("Build/Clean", false, 200)]
+        [MenuItem("Build/WebGL", false, 300)]
+        private static void BuildWebGl() {
+            CustomBuildPipelineRunner.Execute(
+                BuildsDir,
+                new SimpleWebGlBuildPipeline(Scenes));
+        }
+
+        [MenuItem("Build/Clean", false, 100000)]
         private static void Clean() {
             if (Directory.Exists(BuildsDir)) {
                 Directory.Delete(BuildsDir, true);
             }
 
             Debug.Log("Cleaning complete.");
-        }
-
-        private static (string, string) GetSteamNameAndPassword() {
-            string[] lines = File.ReadAllLines(@"SteamCreds\user_pw.txt");
-            return (lines[0], lines[1]);
         }
     }
 }

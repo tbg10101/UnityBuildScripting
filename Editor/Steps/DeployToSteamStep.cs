@@ -10,43 +10,63 @@ namespace Software10101.BuildScripting.Editor {
         // Ensure that we only run one of these at a time or Steam can fail.
         private static readonly object LockObject = new object();
 
-        [NotNull]
-        public static string SteamCliPath = @"C:\Program Files\Steamworks SDK\tools\ContentBuilder\builder\steamcmd.exe";
-
-        /// <summary>
-        /// To get this file, log into Steam and enter your Steam Guard code like normal.
-        /// A file with a name starting with "ssfn" be generated next to the Steam executable.
-        /// https://partner.steamgames.com/doc/sdk/uploading
-        /// </summary>
-        [NotNull]
-        public static string SsfnPath = @"SteamCreds\ssfn5073304987753677769";
-
-        /// <summary>
-        /// To get this file, log into Steam and enter your Steam Guard code like normal.
-        /// A file named "config.vdf" will be generated in a directory called "config" next to the Steam executable.
-        /// https://partner.steamgames.com/doc/sdk/uploading
-        /// </summary>
-        [NotNull]
-        public static string ConfigVdfPath = @"SteamCreds\config\config.vdf";
-
         private readonly uint _appId;
         private readonly uint _depotId;
+        [NotNull]
         private readonly string _contentRoot;
+        [NotNull]
         private readonly string _accountName;
+        [NotNull]
         private readonly string _accountPassword;
+        [NotNull]
+        private readonly string _ssfnPath;
+        [NotNull]
+        private readonly string _configVdfPath;
+        [NotNull]
+        private readonly string _steamCliPath;
 
+        /// <param name="appId">Steam app ID.</param>
+        /// <param name="depotId">Steam depot ID where the build will be updated.</param>
+        /// <param name="contentRoot">The root directory to upload to Steam.</param>
+        /// <param name="accountName">The username of the Steam account to use when uploading the build.</param>
+        /// <param name="accountPassword">The password for the given account.</param>
+        /// <param name="ssfnPath">
+        ///     Used to get around SteamGuard. To get this file, log into Steam and enter your Steam Guard code like normal.
+        ///     A file with a name starting with "ssfn" be generated next to the Steam executable.
+        ///
+        ///     https://partner.steamgames.com/doc/sdk/uploading
+        /// </param>
+        /// <param name="configVdfPath">
+        ///     Used to get around SteamGuard. To get this file, log into Steam and enter your Steam Guard code like normal.
+        ///     A file named "config.vdf" will be generated in a directory called "config" next to the Steam executable.
+        ///
+        ///     https://partner.steamgames.com/doc/sdk/uploading
+        /// </param>
+        /// <param name="steamCliPath">Path to the Steam CLI to use when uploading the build.</param>
         public DeployToSteamStep(
             uint appId,
             uint depotId,
             string contentRoot,
             string accountName,
-            string accountPassword
+            string accountPassword,
+            string ssfnPath,
+            string configVdfPath,
+            string steamCliPath
         ) {
             _appId = appId;
             _depotId = depotId;
-            _contentRoot = contentRoot;
-            _accountName = accountName;
-            _accountPassword = accountPassword;
+            _contentRoot = contentRoot
+                           ?? throw new ArgumentException("Parameter cannot be null.", nameof(contentRoot));
+            _accountName = accountName
+                           ?? throw new ArgumentException("Parameter cannot be null.", nameof(accountName));
+            _accountPassword = accountPassword
+                               ?? throw new ArgumentException("Parameter cannot be null.", nameof(accountPassword));
+            _ssfnPath = ssfnPath
+                        ?? throw new ArgumentException("Parameter cannot be null.", nameof(ssfnPath));
+            _configVdfPath = configVdfPath
+                             ?? throw new ArgumentException("Parameter cannot be null.", nameof(configVdfPath));
+            _steamCliPath = steamCliPath
+                            ?? throw new ArgumentException("Parameter cannot be null.", nameof(steamCliPath));
         }
 
         public override void Execute(string outputDir, AbstractBuildPipeline pipeline) {
@@ -92,7 +112,7 @@ namespace Software10101.BuildScripting.Editor {
                 File.WriteAllText(vdfPath, sb.ToString());
 
                 // write SteamGuard files
-                string ssfnDestination = Path.GetFullPath(Path.Combine(SteamCliPath, "..", Path.GetFileName(SsfnPath)));
+                string ssfnDestination = Path.GetFullPath(Path.Combine(_steamCliPath, "..", Path.GetFileName(_ssfnPath)));
                 string ssfnBackup = $"{ssfnDestination}.bak";
 
                 if (File.Exists(ssfnDestination)) {
@@ -103,15 +123,15 @@ namespace Software10101.BuildScripting.Editor {
                     File.Move(ssfnDestination, ssfnBackup);
                 }
 
-                File.Copy(SsfnPath, ssfnDestination);
+                File.Copy(_ssfnPath, ssfnDestination);
 
-                string configParent = Path.GetFullPath(Path.Combine(SteamCliPath, "..", "config"));
+                string configParent = Path.GetFullPath(Path.Combine(_steamCliPath, "..", "config"));
 
                 if (!Directory.Exists(configParent)) {
                     Directory.CreateDirectory(configParent);
                 }
 
-                string configDestination = Path.Combine(configParent, Path.GetFileName(ConfigVdfPath));
+                string configDestination = Path.Combine(configParent, Path.GetFileName(_configVdfPath));
                 string configBackup = $"{configDestination}.bak";
 
                 if (File.Exists(configDestination)) {
@@ -122,16 +142,16 @@ namespace Software10101.BuildScripting.Editor {
                     File.Move(configDestination, configBackup);
                 }
 
-                File.Copy(ConfigVdfPath, configDestination);
+                File.Copy(_configVdfPath, configDestination);
 
                 // execute deployment
                 string args =
                     $"+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login \"{_accountName}\" \"{_accountPassword}\" +run_app_build \"{vdfFullPath}\" +quit";
-                Debug.Log($"Beginning deployment: {SteamCliPath} {args}");
+                Debug.Log($"Beginning deployment: {_steamCliPath} {args}");
 
                 using (Process deployProcess = new Process {
                            StartInfo = new ProcessStartInfo {
-                               FileName = SteamCliPath,
+                               FileName = _steamCliPath,
                                Arguments = args,
                                CreateNoWindow = true,
                                UseShellExecute = false,
