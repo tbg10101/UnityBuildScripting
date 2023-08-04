@@ -6,8 +6,8 @@ using Debug = UnityEngine.Debug;
 namespace Software10101.BuildScripting.Editor {
     public class ArchiveCygwinTar : AbstractBuildStep {
 
-        public static string TarPath = @"C:\cygwin\bin\tar.exe";
-        public static string GzipPath = @"C:\cygwin\bin\gzip.exe";
+        public static string TarPath = @"C:\cygwin64\bin\tar.exe";
+        public static string GzipPath = @"C:\cygwin64\bin\gzip.exe";
 
         private readonly string _directoryToArchive;
         private readonly string _outputPath;

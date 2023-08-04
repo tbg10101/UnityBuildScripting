@@ -38,8 +38,16 @@ namespace Software10101.BuildScripting.Editor {
 
                             consecutiveMainThreadSteps.Add(() => {
                                 Debug.Log($"Step starting on main thread: {Name}-{mainThreadBuildStep.GetType().Name}");
-                                mainThreadBuildStep.Execute(targetOutputDir, this);
-                                Debug.Log($"Step complete: {Name}-{mainThreadBuildStep.GetType().Name}");
+
+                                try {
+                                    mainThreadBuildStep.Execute(targetOutputDir, this);
+                                    Debug.Log($"Step complete: {Name}-{mainThreadBuildStep.GetType().Name}");
+                                } catch (Exception e) {
+                                    Debug.LogError($"Step failed: {Name}-{mainThreadBuildStep.GetType().Name}\n" +
+                                                   $"{e.GetType().FullName}: {e.Message}\n{e.StackTrace}\n");
+                                    throw;
+                                }
+
                                 uncompletedStepsCount--;
                             });
 
@@ -58,7 +66,7 @@ namespace Software10101.BuildScripting.Editor {
                     }
                 }
             } catch (Exception e) {
-                Debug.LogException(e);
+                Debug.LogError($"Exception while executing build pipeline: {e.Message}\n{e.StackTrace}\n");
             }
         }
     }
